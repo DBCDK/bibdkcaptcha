@@ -1,0 +1,63 @@
+<?php
+/**
+ * @file
+ * Extending the CAPTCHA module with dansih language audio support.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function bibdkcaptcha_help($path, $arg) {
+  $output = '';
+  switch ($path) {
+    case 'admin/modules#name':
+      $output .= t('Bibdk Captcha');
+      break;
+    case 'admin/modules#description':
+    case 'admin/user/captcha/bibdkcaptcha':
+      break;
+    case 'admin/help#bibdkcaptcha':
+      break;
+  }
+  return $output;
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function bibdkcaptcha_menu() {
+  $items = array();
+  $items['admin/config/people/captcha/bibdkcaptcha'] = array(
+    'title' => 'bibdkcaptcha',
+    'description' => 'Administer the reCAPTCHA web service.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('recaptcha_admin_settings'),
+    'access arguments' => array('administer recaptcha'),
+    'type' => MENU_LOCAL_TASK,
+    #'file' => 'recaptcha.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_captcha().
+ * 
+ */
+function bibdkcaptcha_captcha($op, $captcha_type='', $sid = NULL) {
+  switch ($op) {
+    case 'list':
+      return array('Bibdk Captcha');
+    case 'generate':
+      if ($captcha_type == 'Bibdk Captcha') {
+        $captcha = image_captcha_captcha($op, 'Image', $sid);
+        generateSoundFile($captcha['solution']);
+        return $captcha;
+      }
+      break;
+  }
+}
+
+function generateSoundFile($solution){
+  
+}
