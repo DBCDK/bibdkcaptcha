@@ -45,6 +45,7 @@ function bibdkcaptcha_menu() {
  * 
  */
 function bibdkcaptcha_captcha($op, $captcha_type='', $sid = NULL) {
+  dpm('bibdk captcha');
   switch ($op) {
     case 'list':
       return array('Bibdk Captcha');
@@ -52,12 +53,15 @@ function bibdkcaptcha_captcha($op, $captcha_type='', $sid = NULL) {
       if ($captcha_type == 'Bibdk Captcha') {
         $captcha = image_captcha_captcha($op, 'Image', $sid);
         generateSoundFile($captcha['solution']);
+        $markup = append_buttons($captcha['form']['captcha_image']['#markup']);;
+        $captcha['form']['captcha_image']['#markup'] = $markup;
+        dpm($captcha['form']['captcha_image']['#markup']);
         return $captcha;
       }
       break;
   }
 }
 
-function generateSoundFile($solution){
-  
+function generateSoundFile($solution) {
+  dpm($solution);
 }
