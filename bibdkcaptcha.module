@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Extending the CAPTCHA module with dansih language audio support.
@@ -22,7 +23,6 @@ function bibdkcaptcha_help($path, $arg) {
   return $output;
 }
 
-
 /**
  * Implements hook_menu().
  */
@@ -35,7 +35,13 @@ function bibdkcaptcha_menu() {
     'page arguments' => array('recaptcha_admin_settings'),
     'access arguments' => array('administer recaptcha'),
     'type' => MENU_LOCAL_TASK,
-    #'file' => 'recaptcha.admin.inc',
+      #'file' => 'recaptcha.admin.inc',
+  );
+
+  $items['user/create_login/refreshcatptcha'] = array(
+    'page callback' => 'bibdkcaptcha_callback_test',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
   );
   return $items;
 }
@@ -44,8 +50,9 @@ function bibdkcaptcha_menu() {
  * Implementation of hook_captcha().
  * 
  */
-function bibdkcaptcha_captcha($op, $captcha_type='', $sid = NULL) {
+function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
   dpm('bibdk captcha');
+  drupal_add_js(drupal_get_path('module', 'bibdkcaptcha') . '/bibdkcaptcha.js');
   switch ($op) {
     case 'list':
       return array('Bibdk Captcha');
@@ -53,15 +60,28 @@ function bibdkcaptcha_captcha($op, $captcha_type='', $sid = NULL) {
       if ($captcha_type == 'Bibdk Captcha') {
         $captcha = image_captcha_captcha($op, 'Image', $sid);
         generateSoundFile($captcha['solution']);
-        $markup = append_buttons($captcha['form']['captcha_image']['#markup']);;
+        $markup = _append_buttons($captcha['form']['captcha_image']['#markup']);
         $captcha['form']['captcha_image']['#markup'] = $markup;
-        dpm($captcha['form']['captcha_image']['#markup']);
         return $captcha;
       }
       break;
   }
 }
 
+function _append_buttons($markup) {
+  $module_path = base_path() . drupal_get_path('module', 'bibdkcaptcha');
+  $refresh_btn = $module_path . '/graphics/refresh.gif';
+  $audio_btn = $module_path . '/graphics/audio_icon.gif';
+  $markup = $markup . '<br/><img id="refreshbtn" src="' . $refresh_btn . '"/>
+    <img id="audiobtn" src="' . $audio_btn . '"/>';
+  return $markup;
+}
+
 function generateSoundFile($solution) {
   dpm($solution);
+}
+
+function bibdkcaptcha_callback_test() {
+  $data = 'string sent from PHP';
+  drupal_json_output($data);
 }
