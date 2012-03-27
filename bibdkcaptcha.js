@@ -2,7 +2,9 @@
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
             $("#refreshbtn").click(function() {
-                console.log('refreshbtn clicked');
+                $("#captcha img:first-child").fadeOut(200, function(){
+                    $("#captcha img:first-child").remove();
+                });
                 jQuery.ajax({
                     type: 'GET',
                     url:'create_login/refreshcatptcha',
@@ -12,20 +14,24 @@
             });
             
             $("#audiobtn").click(function() {
-                console.log('audiobtn clicked');
-                $.get('user/create_login#refresh', 'rid=' + $(this).attr('id'), callback);
-
-                // prevent entire page from reloading
+                jQuery.ajax({
+                    type: 'GET',
+                    url:'create_login/playaudiocaptcha',
+                    success: playAudio
+                    });
                 return false;
             });
             
             function updateCaptcha(){
-                console.log('updateCaptcha');
                 $.get('create_login/refreshcatptcha',
                     function(data){
-                        console.log(data);
+                        $(data).prependTo("#captcha");
                     });
                 return false;
+            }
+            
+            function playAudio(){
+                console.log('playing audio');
             }
         }
     }
