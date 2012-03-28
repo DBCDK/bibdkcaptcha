@@ -29,8 +29,8 @@ function bibdkcaptcha_help($path, $arg) {
 function bibdkcaptcha_menu() {
   $items = array();
   $items['admin/config/people/captcha/bibdkcaptcha'] = array(
-    'title' => 'bibdkcaptcha',
-    'description' => 'Administer the reCAPTCHA web service.',
+    'title' => t('Bibdk Captcha'),
+    'description' => t('Administer the bibdk vaptchaweb service.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('recaptcha_admin_settings'),
     'access arguments' => array('administer recaptcha'),
@@ -42,11 +42,12 @@ function bibdkcaptcha_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
   );
-  
-  $items['user/create_login/playaudiocaptcha'] = array(
-    'page callback' => 'bibdkcaptcha_play_audio_file',
-    'type' => MENU_CALLBACK,
+
+  $items['user/create_login/playaudiocaptcha/%/%'] = array(
+    'page callback' => 'bibdkcaptcha_generate_audio_file',
+    'page arguments' => array(3, 4),
     'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -63,9 +64,9 @@ function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
     case 'generate':
       if ($captcha_type == 'Bibdk Captcha') {
         $captcha = image_captcha_captcha($op, 'Image', $sid);
-        $markup = '<div id="captcha">' . _append_buttons($captcha['form']['captcha_image']['#markup']);
+        $markup = '<div id="captcha">' . _bibdkcaptcha_append_buttons($captcha['form']['captcha_image']['#markup']);
         $captcha['form']['captcha_image']['#markup'] = $markup;
-        #generateSoundFile($captcha['solution']);
+        #bibdkcaptcha_play_audio_file('abcde');
         return $captcha;
       }
       break;
@@ -73,9 +74,13 @@ function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
       module_load_include('inc', 'captcha');
       $captcha_sid = _captcha_generate_captcha_session('user_register_form');
       $captcha = image_captcha_captcha('generate', 'Image', $captcha_sid);
-      _bibdkcaptcha_update_captcha_session($captcha_sid, $captcha['solution']);
-      #generateSoundFile($captcha['solution']);
-      return $captcha['form']['captcha_image']['#markup'];
+      $token = _bibdkcaptcha_update_captcha_session($captcha_sid, $captcha['solution']);
+      $data = array(
+        'sid' => $captcha_sid,
+        'captcha' => $captcha['form']['captcha_image']['#markup'],
+        'token' => $token
+      );
+      return $data;
       break;
   }
 }
@@ -96,6 +101,7 @@ function _bibdkcaptcha_update_captcha_session($captcha_sid, $solution) {
         'solution' => $solution,
       ))
       ->execute();
+  return $token;
 }
 
 /**
@@ -103,7 +109,7 @@ function _bibdkcaptcha_update_captcha_session($captcha_sid, $solution) {
  * @param string $markup
  * @return string 
  */
-function _append_buttons($markup) {
+function _bibdkcaptcha_append_buttons($markup) {
   $module_path = base_path() . drupal_get_path('module', 'bibdkcaptcha');
   $refresh_btn = $module_path . '/graphics/refresh.gif';
   $audio_btn = $module_path . '/graphics/audio_icon.gif';
@@ -120,10 +126,29 @@ function bibdkcaptcha_callback_refresh() {
   drupal_json_output($data);
 }
 
-function bibdkcaptcha_play_audio_file(){
-  
+function bibdkcaptcha_generate_audio_file($captcha_sid, $token) {
+  $solution = db_query("SELECT solution FROM {captcha_sessions} WHERE csid = '$captcha_sid' AND token = '$token'")->fetchField();
+  $audio = bibdkcaptcha_play_audio_file($solution);
+  print $audio; //TODO return file might not be encoded correctly
+  #drupal_json_output($data);
+  #return $data;
 }
 
-function bibdkcaptcha_generate_audio_file(){
+function bibdkcaptcha_play_audio_file($solution) {
   
+  header('Content-type: audio/mpeg'); //TODO should drupal_add_http_header be used instead?
+  $ext = 'mp3';
+
+  header("Content-Disposition: attachment; filename=bibdkcaptcha_audio.$ext");
+  header('Cache-Control: no-store, no-cache, must-revalidate');
+  header('Expires: Sun, 1 Jan 2000 12:00:00 GMT');
+  header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . 'GMT');
+
+  module_load_include('inc', 'bibdkcaptcha', 'bibdkcaptcha.audio');
+  $audio = bibdkcaptcha_generate_audio($solution);
+
+  header('Content-Length: ' . strlen($audio));
+
+  echo $audio;
+  exit;
 }
