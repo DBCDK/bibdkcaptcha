@@ -1,6 +1,41 @@
 <?php
 
-function bibdkcaptcha_generate_audio($letters) {
+  function bibdkcaptcha_generate_audio_mpeg($letters) {
+  $out_data = '';
+  $lang = 'eng';
+
+  global $language;
+  if ($language->language == 'da') {
+  $lang = 'dan';
+  }
+  $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
+
+  $letters = str_split($letters);
+  $counter = 0;
+  foreach ($letters as $letter) {
+  $filename = $audio_path . strtoupper($letter) . '.wav';
+  $fp = fopen($filename, 'r');
+  $data = fread($fp, filesize($filename)); // read file in
+  #$data = bibdkcaptcha_scramble_audio_data($data, 'mp3'); //TODO should included when audio is working
+  $out_data .= $data;
+  $counter++;
+  fclose($fp);
+  }
+  dvm($counter);
+  return $out_data;
+  }
+
+/**
+ * Generate a wav file by concatenating individual files
+ *
+ * @since 1.0.1
+ * @access private
+ * @param array $letters  Array of letters to build a file from
+ * @return string  WAV file data
+ */
+function bibdkcaptcha_generate_audio_wav($letters) {
+  $out_data = '';
+
   $out_data = '';
   $lang = 'eng';
 
@@ -13,15 +48,63 @@ function bibdkcaptcha_generate_audio($letters) {
   $letters = str_split($letters);
 
   foreach ($letters as $letter) {
-    $filename = $audio_path . strtoupper($letter) . '.mp3';
-    $fp = fopen($filename, 'r');
-    $data = fread($fp, filesize($filename)); // read file in
-    #$data = bibdkcaptcha_scramble_audio_data($data, 'mp3'); //TODO should included when audio is working
-    $out_data .= $data;
+    $filename = $audio_path . strtoupper($letter) . '.wav';
 
+    $fp = fopen($filename, 'rb');
+
+    $file = array();
+
+    $data = fread($fp, filesize($filename)); // read file in
+
+    $header = substr($data, 0, 36);
+    $body = substr($data, 44);
+
+
+    $data = unpack('NChunkID/VChunkSize/NFormat/NSubChunk1ID/VSubChunk1Size/vAudioFormat/vNumChannels/VSampleRate/VByteRate/vBlockAlign/vBitsPerSample', $header);
+
+    $file['sub_chunk1_id'] = $data['SubChunk1ID'];
+    $file['bits_per_sample'] = $data['BitsPerSample'];
+    $file['channels'] = $data['NumChannels'];
+    $file['format'] = $data['AudioFormat'];
+    $file['sample_rate'] = $data['SampleRate'];
+    $file['size'] = $data['ChunkSize'] + 8;
+    $file['data'] = $body;
+
+    if (($p = strpos($file['data'], 'LIST')) !== false) {
+      // If the LIST data is not at the end of the file, this will probably break your sound file
+      $info = substr($file['data'], $p + 4, 8);
+      $data = unpack('Vlength/Vjunk', $info);
+      $file['data'] = substr($file['data'], 0, $p);
+      $file['size'] = $file['size'] - (strlen($file['data']) - $p);
+    }
+
+    $files[] = $file;
+    $data = null;
+    $header = null;
+    $body = null;
+    
+    $data_len += strlen($file['data']); //TODO $data_len = strlen($file['data']);? Currently this line causes an error
+
+    
     fclose($fp);
   }
 
+  $out_data = '';
+  for ($i = 0; $i < sizeof($files); ++$i) {
+    if ($i == 0) { // output header
+      $out_data .= pack('C4VC8', ord('R'), ord('I'), ord('F'), ord('F'), $data_len + 36, ord('W'), ord('A'), ord('V'), ord('E'), ord('f'), ord('m'), ord('t'), ord(' '));
+
+      $out_data .= pack('VvvVVvv', 16, $files[$i]['format'], $files[$i]['channels'], $files[$i]['sample_rate'], $files[$i]['sample_rate'] * (($files[$i]['bits_per_sample'] * $files[$i]['channels']) / 8), ($files[$i]['bits_per_sample'] * $files[$i]['channels']) / 8, $files[$i]['bits_per_sample']);
+
+      $out_data .= pack('C4', ord('d'), ord('a'), ord('t'), ord('a'));
+
+      $out_data .= pack('V', $data_len);
+    }
+
+    $out_data .= $files[$i]['data'];
+  }
+
+  #$this->scrambleAudioData($out_data, 'wav');
   return $out_data;
 }
 

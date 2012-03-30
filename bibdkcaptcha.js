@@ -14,13 +14,18 @@
             });
             
             $("#audiobtn").click(function() {
-                jQuery.ajax({
-                    type: 'GET',
-                    url:'create_login/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val(),
-                    success: playAudio
-                    //dataType: JSON
-                });
+                playCaptcha();
             });
+            
+            function playCaptcha(){
+                var type = 'mp3';
+                //console.log($.browser['safari']);
+                if($.browser['safari']){
+                    type = 'wav';
+                }
+                var url = 'create_login/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;
+                $('#playcaptcha').attr("src",url);
+            }
             
             function updateCaptcha(data){
                 var data = jQuery.parseJSON(data);
@@ -28,12 +33,6 @@
                 $('input[name=captcha_sid]').val(data['sid']);
                 $('input[name=captcha_token]').val(data['token']);
                 return false;
-            }
-            
-            function playAudio(data){
-                console.log('hep');
-            //var data = jQuery.parseJSON(data);
-            //return false;
             }
         }
     }
