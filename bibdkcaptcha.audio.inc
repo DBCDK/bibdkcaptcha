@@ -1,35 +1,34 @@
 <?php
 
-  function bibdkcaptcha_generate_audio_mpeg($letters) {
+/**
+ * Generate a MP3 file by concatenating individual files
+ * @param array $letters  Array of letters to build a file from
+ * @return string  MP3 file data
+ */
+function bibdkcaptcha_generate_audio_mpeg($letters) {
   $out_data = '';
   $lang = 'eng';
 
   global $language;
   if ($language->language == 'da') {
-  $lang = 'dan';
+    $lang = 'dan';
   }
   $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
 
   $letters = str_split($letters);
-  $counter = 0;
   foreach ($letters as $letter) {
-  $filename = $audio_path . strtoupper($letter) . '.wav';
-  $fp = fopen($filename, 'r');
-  $data = fread($fp, filesize($filename)); // read file in
-  #$data = bibdkcaptcha_scramble_audio_data($data, 'mp3'); //TODO should included when audio is working
-  $out_data .= $data;
-  $counter++;
-  fclose($fp);
+    $filename = $audio_path . strtoupper($letter) . '.wav';
+    $fp = fopen($filename, 'r');
+    $data = fread($fp, filesize($filename)); // read file in
+    $data = bibdkcaptcha_scramble_audio_data($data);
+    $out_data .= $data;
+    fclose($fp);
   }
-  dvm($counter);
   return $out_data;
-  }
+}
 
 /**
  * Generate a wav file by concatenating individual files
- *
- * @since 1.0.1
- * @access private
  * @param array $letters  Array of letters to build a file from
  * @return string  WAV file data
  */
@@ -47,6 +46,7 @@ function bibdkcaptcha_generate_audio_wav($letters) {
 
   $letters = str_split($letters);
 
+  $data_len = 0;
   foreach ($letters as $letter) {
     $filename = $audio_path . strtoupper($letter) . '.wav';
 
@@ -82,10 +82,10 @@ function bibdkcaptcha_generate_audio_wav($letters) {
     $data = null;
     $header = null;
     $body = null;
-    
-    $data_len += strlen($file['data']); //TODO $data_len = strlen($file['data']);? Currently this line causes an error
 
-    
+    $data_len += strlen($file['data']);
+
+
     fclose($fp);
   }
 
@@ -104,16 +104,14 @@ function bibdkcaptcha_generate_audio_wav($letters) {
     $out_data .= $files[$i]['data'];
   }
 
+  $out_data = bibdkcaptcha_scramble_audio_data($out_data);
   #$this->scrambleAudioData($out_data, 'wav');
   return $out_data;
 }
 
 /**
- * Randomly modify the audio data to scramble sound and prevent binary recognition.<br />
+ * Randomly modify the audio data to scramble sound and prevent binary recognition.
  * Take care not to "break" the audio file by leaving the header data intact.
- *
- * @since 2.0
- * @access private
  * @param $data Sound data in mp3 of wav format
  */
 function bibdkcaptcha_scramble_audio_data($data) {
