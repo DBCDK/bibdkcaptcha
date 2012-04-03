@@ -5,7 +5,7 @@
  * @param array $letters  Array of letters to build a file from
  * @return string  MP3 file data
  */
-function bibdkcaptcha_generate_audio_mpeg($letters) {
+function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
   $out_data = '';
   $lang = 'eng';
 
@@ -16,6 +16,9 @@ function bibdkcaptcha_generate_audio_mpeg($letters) {
   $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
 
   $letters = str_split($letters);
+  if (!$case_sentitive && $lang == 'dan') {
+    $letters = bibdkcaptcha_generate_case_sensitive($letters); //Upper-/lowercase is currently supported in dansih only
+  }
   foreach ($letters as $letter) {
     $filename = $audio_path . strtoupper($letter) . '.wav';
     $fp = fopen($filename, 'r');
@@ -32,7 +35,7 @@ function bibdkcaptcha_generate_audio_mpeg($letters) {
  * @param array $letters  Array of letters to build a file from
  * @return string  WAV file data
  */
-function bibdkcaptcha_generate_audio_wav($letters) {
+function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
   $out_data = '';
 
   $out_data = '';
@@ -45,6 +48,9 @@ function bibdkcaptcha_generate_audio_wav($letters) {
   $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
 
   $letters = str_split($letters);
+  if (!$case_sentitive && $lang == 'dan') {
+    $letters = bibdkcaptcha_generate_case_sensitive($letters); //Upper-/lowercase is currently supported in dansih only
+  }
 
   $data_len = 0;
   foreach ($letters as $letter) {
@@ -58,7 +64,6 @@ function bibdkcaptcha_generate_audio_wav($letters) {
 
     $header = substr($data, 0, 36);
     $body = substr($data, 44);
-
 
     $data = unpack('NChunkID/VChunkSize/NFormat/NSubChunk1ID/VSubChunk1Size/vAudioFormat/vNumChannels/VSampleRate/VByteRate/vBlockAlign/vBitsPerSample', $header);
 
@@ -85,7 +90,6 @@ function bibdkcaptcha_generate_audio_wav($letters) {
 
     $data_len += strlen($file['data']);
 
-
     fclose($fp);
   }
 
@@ -105,7 +109,6 @@ function bibdkcaptcha_generate_audio_wav($letters) {
   }
 
   $out_data = bibdkcaptcha_scramble_audio_data($out_data);
-  #$this->scrambleAudioData($out_data, 'wav');
   return $out_data;
 }
 
@@ -145,4 +148,25 @@ function bibdkcaptcha_scramble_audio_data($data) {
   }
 
   return $data;
+}
+
+/**
+ * Helper function to support case sensitivness in danish speaken audio captcha. 
+ * @param array $letters
+ * @return array $sens_letters with strings to support upper- and lowercase. Dansih only
+ */
+function bibdkcaptcha_generate_case_sensitive($letters) {
+  $sens_letters = array();
+  foreach ($letters as $letter) {
+    if (!is_numeric($letter)) {
+      if (ctype_upper($letter)) {
+        $sens_letters[] = 'stort';
+      }
+      else {
+        $sens_letters[] = 'lille';
+      }
+    }
+    $sens_letters[] = $letter;
+  }
+  return $sens_letters;
 }

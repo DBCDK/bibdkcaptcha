@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Extending the CAPTCHA module with dansih language audio support.
+ * Extending the CAPTCHA module with dansih and english language audio support.
  */
 
 /**
@@ -55,7 +55,7 @@ function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
     case 'generate':
       if ($captcha_type == 'Bibdk Captcha') {
         $captcha = image_captcha_captcha($op, 'Image', $sid);
-        $markup = '<div id="captcha">' . _bibdkcaptcha_append_buttons($captcha['form']['captcha_image']['#markup']);
+        $markup = _bibdkcaptcha_get_markup($captcha['form']['captcha_image']['#markup']);
         $captcha['form']['captcha_image']['#markup'] = $markup;
         return $captcha;
       }
@@ -99,14 +99,23 @@ function _bibdkcaptcha_update_captcha_session($captcha_sid, $solution) {
  * @param string $markup
  * @return string 
  */
-function _bibdkcaptcha_append_buttons($markup) {
+function _bibdkcaptcha_get_markup($markup) {
   $module_path = base_path() . drupal_get_path('module', 'bibdkcaptcha');
-  $refresh_btn = $module_path . '/graphics/refresh.gif';
-  $audio_btn = $module_path . '/graphics/audio_icon.gif';
-  $markup = $markup . '<br/><img id="refreshbtn" src="' . $refresh_btn . '"/>
-    <img id="audiobtn" src="' . $audio_btn . '"/></div>';
-  $markup = $markup . '<audio id="playcaptcha" autoplay="true" hidden="true" src="" type="audio/mpeg"></audio>';
+  $captcha_url = $markup;
+  $markup = theme('bibdkcaptcha', array('captcha' => $captcha_url, 'module_path' => $module_path));
   return $markup;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function bibdkcaptcha_theme() {
+  return array(
+    'bibdkcaptcha' => array(
+      'variables' => array(),
+      'template' => 'template/bibdkcaptcha',
+    ),
+  );
 }
 
 /**
@@ -136,15 +145,18 @@ function bibdkcaptcha_generate_audio_file($captcha_sid, $token, $type) {
  */
 function bibdkcaptcha_play_audio_file($solution, $type) {
   module_load_include('inc', 'bibdkcaptcha', 'bibdkcaptcha.audio');
+
+  $case_sentitive = variable_get('captcha_default_validation');
+
   if ($type == 'mpeg') {
     header('Content-type: audio/mpeg'); //TODO should drupal_add_http_header be used instead?
     $ext = 'mp3';
-    $audio = bibdkcaptcha_generate_audio_mpeg($solution);
+    $audio = bibdkcaptcha_generate_audio_mpeg($solution, $case_sentitive);
   }
   else {
     header('Content-type: audio/x-wav'); //TODO should drupal_add_http_header be used instead?
     $ext = 'wav';
-    $audio = bibdkcaptcha_generate_audio_wav($solution);
+    $audio = bibdkcaptcha_generate_audio_wav($solution, $case_sentitive);
   }
   header("Content-Disposition: attachment; filename=bibdkcaptcha_audio.$ext");
   header('Cache-Control: no-store, no-cache, must-revalidate');

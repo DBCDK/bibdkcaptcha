@@ -15,3 +15,5 @@ modules directory from your website (typically sites/all/modules).
 Dependencies:
 The basic CAPTCHA module has no dependencies, nothing special is required.
 The bibdkcaptcha.module relies on the CAPTCHA module and the image_captcha module
+
+Description for each language is set in the modules CAPTCHA admin interface
