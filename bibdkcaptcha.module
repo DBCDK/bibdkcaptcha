@@ -28,15 +28,15 @@ function bibdkcaptcha_help($path, $arg) {
  */
 function bibdkcaptcha_menu() {
   $items = array();
-  $items['user/create_login/refreshcatptcha'] = array(
+  $items['captcha/refreshcatptcha'] = array(
     'page callback' => 'bibdkcaptcha_callback_refresh',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
   );
 
-  $items['user/create_login/playaudiocaptcha/%/%/%'] = array(
+  $items['captcha/playaudiocaptcha/%/%/%'] = array(
     'page callback' => 'bibdkcaptcha_generate_audio_file',
-    'page arguments' => array(3, 4, 5),
+    'page arguments' => array(2, 3, 4),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );

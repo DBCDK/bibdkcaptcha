@@ -4,7 +4,7 @@
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
                 jQuery.ajax({
                     type: 'GET',
-                    url:'create_login/refreshcatptcha',
+                    url:'captcha/refreshcatptcha',
                     success: updateCaptcha,
                     dataType: JSON
                 });
@@ -19,7 +19,7 @@
                     type = 'wav';
                     $('#bibdkcaptcha-controls-playcaptcha').attr("type","audio/x-wav");
                 }
-                var url = 'create_login/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;   
+                var url = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;   
                 if($.browser['msie']){
                     if($('#bibdkcaptcha-controls-playcaptcha')){
                         $('#bibdkcaptcha-controls-playcaptcha').remove();
