@@ -1,6 +1,13 @@
 (function($) {
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
+            var host = "http://" + document.location.hostname;
+            var basePath = Drupal.settings.basePath;
+            if(basePath){
+                host = host + basePath;
+            }
+
+            var pathname = window.location.pathname;
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
                 jQuery.ajax({
                     type: 'GET',
@@ -17,16 +24,18 @@
                 var type = 'mp3'; 
                 if($.browser['safari']){
                     type = 'wav';
-                    $('#bibdkcaptcha-controls-playcaptcha').attr("type","audio/x-wav");
+                    $("#bibdkcaptcha-controls-playcaptcha").attr("type","audio/x-wav");
                 }
-                var url = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;   
-                if($.browser['msie']){
-                    if($('#bibdkcaptcha-controls-playcaptcha')){
-                        $('#bibdkcaptcha-controls-playcaptcha').remove();
+                var mainUrl = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;
+                if($.browser['msie']){ // && $.browser['version'] <= 8){
+                    if($("#bibdkcaptcha-controls-playcaptcha")){
+                        $("#bibdkcaptcha-controls-playcaptcha").remove();
                     }
-                    $('#captcha').append('﻿<embed id="embedobj" hidden="true" src="' + url +'" ></embed>');
+                    
+                    url = host + mainUrl;
+                    $("#bibdkcaptcha-controls").append('﻿<embed id="embedobj" hidden="true" src="'+url+'" autoplay="true" autostart="true"></embed>');
                 } else {
-                    $('#bibdkcaptcha-controls-playcaptcha').attr("src",url);
+                    $("#bibdkcaptcha-controls-playcaptcha").attr("src",mainUrl);
                 }
             }
             function updateCaptcha(data){
