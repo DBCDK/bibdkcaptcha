@@ -6,3 +6,5 @@ package = "Spam control"
 core = 7.x
  
 files[] = bibdkcaptcha.module
+files[] = bibdkcaptcha.audio.inc
+files[] = bibdkcaptcha.js
