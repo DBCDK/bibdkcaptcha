@@ -148,7 +148,7 @@ function bibdkcaptcha_play_audio_file($solution, $type) {
 
   $case_sentitive = variable_get('captcha_default_validation');
 
-  if ($type == 'mpeg') {
+  if ($type == 'mp3') {
     header('Content-type: audio/mpeg'); //TODO should drupal_add_http_header be used instead?
     $ext = 'mp3';
     $audio = bibdkcaptcha_generate_audio_mpeg($solution, $case_sentitive);
