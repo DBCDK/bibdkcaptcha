@@ -1,10 +1,11 @@
-(function($) {
+    (function($) {
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
             var host = "http://" + document.location.hostname;
             var basePath = Drupal.settings.basePath;
             if(basePath){
-                host = host + basePath;
+                host = host;
+                console.log(host);
             }
 
             var pathname = window.location.pathname;
@@ -33,6 +34,7 @@
                     }
                     
                     url = host + mainUrl;
+                    console.log(url);
                     $("#bibdkcaptcha-controls").append('﻿<embed id="embedobj" hidden="true" src="'+url+'" autoplay="true" autostart="true"></embed>');
                 } else {
                     $("#bibdkcaptcha-controls-playcaptcha").attr("src",mainUrl);
