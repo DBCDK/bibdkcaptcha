@@ -2,13 +2,6 @@
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
             var host = "http://" + document.location.hostname;
-            var basePath = Drupal.settings.basePath;
-            console.log(basePath);
-            if(basePath){
-                host = host + "/" + basePath;
-                console.log(host);
-            }
-            console.log(basePath);
 
             var pathname = window.location.pathname;
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
