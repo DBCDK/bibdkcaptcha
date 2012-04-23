@@ -25,8 +25,9 @@
                 $("input#edit-captcha-response").focus();
             });
             function playCaptcha(){
-                var type = 'mp3'; 
-                if($.browser['safari']){
+                var type = 'mp3';
+                console.log($.browser);
+                if($.browser['safari'] || $.browser['mozilla']){
                     type = 'wav';
                     $("#bibdkcaptcha-controls-playcaptcha").attr("type","audio/x-wav");
                 }
