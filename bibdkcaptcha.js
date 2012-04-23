@@ -5,7 +5,7 @@
             
             var basePath = Drupal.settings.basePath;
             console.log(basePath);
-            if(basePath.length >= 2 ){
+            if(basePath.length){
                 host = host + basePath;
                 console.log(host);
             }
