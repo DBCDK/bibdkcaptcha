@@ -2,8 +2,16 @@
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
             var host = "http://" + document.location.hostname;
+            
+            var basePath = Drupal.settings.basePath;
+            console.log(basePath);
+            if(basePath.length >= 2 ){
+                host = host + basePath;
+                console.log(host);
+            }
+            console.log(basePath);
 
-            var pathname = window.location.pathname;
+            
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
                 jQuery.ajax({
                     type: 'GET',
@@ -22,7 +30,7 @@
                     type = 'wav';
                     $("#bibdkcaptcha-controls-playcaptcha").attr("type","audio/x-wav");
                 }
-                var mainUrl = '/captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;
+                var mainUrl = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;
                 url = host + mainUrl;
                 console.log(url);
                 if($.browser['msie']){ // && $.browser['version'] <= 8){
