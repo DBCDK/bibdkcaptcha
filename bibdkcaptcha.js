@@ -28,16 +28,16 @@
                     $("#bibdkcaptcha-controls-playcaptcha").attr("type","audio/x-wav");
                 }
                 var mainUrl = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"+type;
+                url = host + mainUrl;
+                console.log(url);
                 if($.browser['msie']){ // && $.browser['version'] <= 8){
                     if($("#bibdkcaptcha-controls-playcaptcha")){
                         $("#bibdkcaptcha-controls-playcaptcha").remove();
                     }
                     
-                    url = host + mainUrl;
-                    console.log(url);
                     $("#bibdkcaptcha-controls").append('﻿<embed id="embedobj" hidden="true" src="'+url+'" autoplay="true" autostart="true"></embed>');
                 } else {
-                    $("#bibdkcaptcha-controls-playcaptcha").attr("src",mainUrl);
+                    $("#bibdkcaptcha-controls-playcaptcha").attr("src", url);
                 }
             }
             function updateCaptcha(data){
