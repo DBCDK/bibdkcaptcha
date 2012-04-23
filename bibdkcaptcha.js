@@ -4,7 +4,7 @@
             var host = "http://" + document.location.hostname;
             var basePath = Drupal.settings.basePath;
             if(basePath){
-                host = host + basePath;
+                host = host;
             }
 
             var pathname = window.location.pathname;
