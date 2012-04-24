@@ -23,11 +23,27 @@ function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
     $filename = $audio_path . strtoupper($letter) . '.mp3';
     $fp = fopen($filename, 'r');
     $data = fread($fp, filesize($filename)); // read file in
-    #$data = bibdkcaptcha_scramble_audio_data($data);
+    $data = bibdkcaptcha_scramble_audio_data_mpeg($data);
     $out_data .= $data;
     fclose($fp);
   }
   return $out_data;
+}
+
+function bibdkcaptcha_scramble_audio_data_mpeg($data) {
+  $start = 4; // 4 byte (32 bit) frame header
+
+  $start += rand(1, 64); // randomize starting offset
+  $datalen = strlen($data) - $start - 256; // leave last 256 bytes unchanged
+
+  for ($i = $start; $i < $datalen; $i += 64) {
+    $ch = ord($data{$i});
+    if ($ch < 9 || $ch > 119)
+      continue;
+
+    $data{$i} = chr($ch + rand(-8, 8));
+  }
+  return $data;
 }
 
 /**
@@ -76,7 +92,7 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
     $file['data'] = $body;
 
     if (($p = strpos($file['data'], 'LIST')) !== false) {
-      // If the LIST data is not at the end of the file, this will probably break your sound file
+// If the LIST data is not at the end of the file, this will probably break your sound file
       $info = substr($file['data'], $p + 4, 8);
       $data = unpack('Vlength/Vjunk', $info);
       $file['data'] = substr($file['data'], 0, $p);
@@ -139,7 +155,8 @@ function bibdkcaptcha_scramble_audio_data($data) {
     }
 
     if ($ch < 0)
-      $ch = 0; else if ($ch > 255)
+      $ch = 0;
+    else if ($ch > 255)
       $ch = 255;
 
     $data{$i} = chr($ch);
