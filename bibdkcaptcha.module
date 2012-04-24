@@ -158,7 +158,7 @@ function bibdkcaptcha_play_audio_file($solution, $type) {
     $ext = 'wav';
     $audio = bibdkcaptcha_generate_audio_wav($solution, $case_sentitive);
   }
-  header("Content-Disposition: inline; filename=bibdkcaptcha_audio.$ext");
+  header("Content-Disposition: attachment; filename=bibdkcaptcha_audio.$ext");
   header('Cache-Control: no-store, no-cache, must-revalidate');
   header('Expires: Sun, 1 Jan 2000 12:00:00 GMT');
   header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . 'GMT');

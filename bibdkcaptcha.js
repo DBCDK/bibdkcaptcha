@@ -32,6 +32,7 @@
                 thissound.autoplay = 'auto';
                 thissound.src = (url + type);
                 thissound.play();
+                //setTimeout("", 300);
                 
                 $("input#edit-captcha-response").focus();
             });

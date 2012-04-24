@@ -54,7 +54,6 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
 function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
   $out_data = '';
 
-  $out_data = '';
   $lang = 'eng';
 
   global $language;
