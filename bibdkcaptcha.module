@@ -149,16 +149,16 @@ function bibdkcaptcha_play_audio_file($solution, $type) {
   $case_sentitive = variable_get('captcha_default_validation');
 
   if ($type == 'mp3') {
-    header('Content-type: audio/mpeg'); //TODO should drupal_add_http_header be used instead?
+    header('Content-type: audio/mpeg');
     $ext = 'mp3';
     $audio = bibdkcaptcha_generate_audio_mpeg($solution, $case_sentitive);
   }
   else {
-    header('Content-type: audio/x-wav'); //TODO should drupal_add_http_header be used instead?
+    header('Content-type: audio/wav');
     $ext = 'wav';
     $audio = bibdkcaptcha_generate_audio_wav($solution, $case_sentitive);
   }
-  header("Content-Disposition: attachment; filename=bibdkcaptcha_audio.$ext");
+  header("Content-Disposition: inline; filename=bibdkcaptcha_audio.$ext");
   header('Cache-Control: no-store, no-cache, must-revalidate');
   header('Expires: Sun, 1 Jan 2000 12:00:00 GMT');
   header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . 'GMT');

@@ -20,10 +20,10 @@ function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
     $letters = bibdkcaptcha_generate_case_sensitive($letters); //Upper-/lowercase is currently supported in dansih only
   }
   foreach ($letters as $letter) {
-    $filename = $audio_path . strtoupper($letter) . '.wav';
+    $filename = $audio_path . strtoupper($letter) . '.mp3';
     $fp = fopen($filename, 'r');
     $data = fread($fp, filesize($filename)); // read file in
-    $data = bibdkcaptcha_scramble_audio_data($data);
+    #$data = bibdkcaptcha_scramble_audio_data($data);
     $out_data .= $data;
     fclose($fp);
   }
