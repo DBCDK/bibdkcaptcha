@@ -5,6 +5,4 @@ dependencies[] = image_captcha
 package = "Spam control"
 core = 7.x
 version = 0.1
-;files[] = bibdkcaptcha.module
-;files[] = bibdkcaptcha.audio.inc
-;files[] = bibdkcaptcha.js
+scripts[] = js/bibdkcaptcha.js

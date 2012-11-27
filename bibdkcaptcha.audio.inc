@@ -1,8 +1,15 @@
 <?php
 
 /**
+ * @file
+ * Builds and returns the audiofile requested by the .module file
+ */
+
+/**
  * Generate a MP3 file by concatenating individual files
+ *
  * @param array $letters  Array of letters to build a file from
+ * @param $case_sentitive
  * @return string  MP3 file data
  */
 function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
@@ -15,12 +22,11 @@ function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
   }
   $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
 
-  $letters = str_split($letters);
   if (!$case_sentitive && $lang == 'dan') {
     $letters = bibdkcaptcha_generate_case_sensitive($letters); //Upper-/lowercase is currently supported in dansih only
   }
   foreach ($letters as $letter) {
-    $filename = $audio_path . strtoupper($letter) . '.mp3';
+    $filename = $audio_path . drupal_strtoupper($letter) . '.mp3';
     $fp = fopen($filename, 'r');
     $data = fread($fp, filesize($filename)); // read file in
     $data = bibdkcaptcha_scramble_audio_data_mpeg($data);
@@ -34,12 +40,13 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
   $start = 4; // 4 byte (32 bit) frame header
 
   $start += rand(1, 64); // randomize starting offset
-  $datalen = strlen($data) - $start - 256; // leave last 256 bytes unchanged
+  $datalen = drupal_strlen($data) - $start - 256; // leave last 256 bytes unchanged
 
   for ($i = $start; $i < $datalen; $i += 64) {
     $ch = ord($data{$i});
-    if ($ch < 9 || $ch > 119)
+    if ($ch < 9 || $ch > 119) {
       continue;
+    }
 
     $data{$i} = chr($ch + rand(-8, 8));
   }
@@ -48,7 +55,9 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
 
 /**
  * Generate a wav file by concatenating individual files
+ *
  * @param array $letters  Array of letters to build a file from
+ * @param $case_sentitive
  * @return string  WAV file data
  */
 function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
@@ -62,14 +71,13 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
   }
   $audio_path = drupal_get_path('module', 'bibdkcaptcha') . '/audio/' . $lang . '/';
 
-  $letters = str_split($letters);
   if (!$case_sentitive && $lang == 'dan') {
     $letters = bibdkcaptcha_generate_case_sensitive($letters); //Upper-/lowercase is currently supported in dansih only
   }
 
   $data_len = 0;
   foreach ($letters as $letter) {
-    $filename = $audio_path . strtoupper($letter) . '.wav';
+    $filename = $audio_path . drupal_strtoupper($letter) . '.wav';
 
     $fp = fopen($filename, 'rb');
 
@@ -77,8 +85,8 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
 
     $data = fread($fp, filesize($filename)); // read file in
 
-    $header = substr($data, 0, 36);
-    $body = substr($data, 44);
+    $header = drupal_substr($data, 0, 36);
+    $body = drupal_substr($data, 44);
 
     $data = unpack('NChunkID/VChunkSize/NFormat/NSubChunk1ID/VSubChunk1Size/vAudioFormat/vNumChannels/VSampleRate/VByteRate/vBlockAlign/vBitsPerSample', $header);
 
@@ -90,20 +98,20 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
     $file['size'] = $data['ChunkSize'] + 8;
     $file['data'] = $body;
 
-    if (($p = strpos($file['data'], 'LIST')) !== false) {
-// If the LIST data is not at the end of the file, this will probably break your sound file
-      $info = substr($file['data'], $p + 4, 8);
+    if (($p = strpos($file['data'], 'LIST')) !== FALSE) {
+    // If the LIST data is not at the end of the file, this will probably break your sound file
+      $info = drupal_substr($file['data'], $p + 4, 8);
       $data = unpack('Vlength/Vjunk', $info);
-      $file['data'] = substr($file['data'], 0, $p);
-      $file['size'] = $file['size'] - (strlen($file['data']) - $p);
+      $file['data'] = drupal_substr($file['data'], 0, $p);
+      $file['size'] = $file['size'] - (drupal_strlen($file['data']) - $p);
     }
 
     $files[] = $file;
-    $data = null;
-    $header = null;
-    $body = null;
+    $data = NULL;
+    $header = NULL;
+    $body = NULL;
 
-    $data_len += strlen($file['data']);
+    $data_len += drupal_strlen($file['data']);
 
     fclose($fp);
   }
@@ -130,21 +138,25 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
 /**
  * Randomly modify the audio data to scramble sound and prevent binary recognition.
  * Take care not to "break" the audio file by leaving the header data intact.
+ *
  * @param $data Sound data in mp3 of wav format
+ * @return \Sound
  */
 function bibdkcaptcha_scramble_audio_data($data) {
   $start = strpos($data, 'data') + 4; // look for "data" indicator
-  if ($start === false)
-    $start = 44;  // if not found assume 44 byte header
+  if ($start === FALSE) {
+    $start = 44;
+  } // if not found assume 44 byte header
 
   $start += rand(1, 4); // randomize starting offset
-  $datalen = strlen($data) - $start;
+  $datalen = drupal_strlen($data) - $start;
   $step = 1;
 
   for ($i = $start; $i < $datalen; $i += $step) {
     $ch = ord($data{$i});
-    if ($ch == 0 || $ch == 255)
+    if ($ch == 0 || $ch == 255) {
       continue;
+    }
 
     if ($ch < 16 || $ch > 239) {
       $ch += rand(-6, 6);
@@ -153,10 +165,12 @@ function bibdkcaptcha_scramble_audio_data($data) {
       $ch += rand(-12, 12);
     }
 
-    if ($ch < 0)
+    if ($ch < 0) {
       $ch = 0;
-    else if ($ch > 255)
+    }
+    elseif ($ch > 255) {
       $ch = 255;
+    }
 
     $data{$i} = chr($ch);
 
@@ -167,7 +181,8 @@ function bibdkcaptcha_scramble_audio_data($data) {
 }
 
 /**
- * Helper function to support case sensitivness in danish speaken audio captcha. 
+ * Helper function to support case sensitivness in danish speaken audio captcha.
+ *
  * @param array $letters
  * @return array $sens_letters with strings to support upper- and lowercase. Dansih only
  */
