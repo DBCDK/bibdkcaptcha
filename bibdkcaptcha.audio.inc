@@ -2,8 +2,10 @@
 
 /**
  * Generate a MP3 file by concatenating individual files
- * @param array $letters  Array of letters to build a file from
- * @return string  MP3 file data
+ *
+ * @param String $letters  String of letters to build a file from
+ * @param Boolean $case_sentitive
+ * @return String  MP3 file data
  */
 function bibdkcaptcha_generate_audio_mpeg($letters, $case_sentitive) {
   $out_data = '';
@@ -38,8 +40,9 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
 
   for ($i = $start; $i < $datalen; $i += 64) {
     $ch = ord($data{$i});
-    if ($ch < 9 || $ch > 119)
+    if ($ch < 9 || $ch > 119) {
       continue;
+    }
 
     $data{$i} = chr($ch + rand(-8, 8));
   }
@@ -48,7 +51,9 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
 
 /**
  * Generate a wav file by concatenating individual files
- * @param array $letters  Array of letters to build a file from
+ *
+ * @param array $letters  String of letters to build a file from
+ * @param $case_sentitive Boolean
  * @return string  WAV file data
  */
 function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
@@ -90,7 +95,7 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
     $file['size'] = $data['ChunkSize'] + 8;
     $file['data'] = $body;
 
-    if (($p = strpos($file['data'], 'LIST')) !== false) {
+    if (($p = strpos($file['data'], 'LIST')) !== FALSE) {
 // If the LIST data is not at the end of the file, this will probably break your sound file
       $info = substr($file['data'], $p + 4, 8);
       $data = unpack('Vlength/Vjunk', $info);
@@ -99,9 +104,9 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
     }
 
     $files[] = $file;
-    $data = null;
-    $header = null;
-    $body = null;
+    $data = NULL;
+    $header = NULL;
+    $body = NULL;
 
     $data_len += strlen($file['data']);
 
@@ -130,12 +135,15 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
 /**
  * Randomly modify the audio data to scramble sound and prevent binary recognition.
  * Take care not to "break" the audio file by leaving the header data intact.
- * @param $data Sound data in mp3 of wav format
+ *
+ * @param $data String data in mp3 of wav format
+ * @return String
  */
 function bibdkcaptcha_scramble_audio_data($data) {
   $start = strpos($data, 'data') + 4; // look for "data" indicator
-  if ($start === false)
-    $start = 44;  // if not found assume 44 byte header
+  if ($start === FALSE) {
+    $start = 44;
+  } // if not found assume 44 byte header
 
   $start += rand(1, 4); // randomize starting offset
   $datalen = strlen($data) - $start;
@@ -143,8 +151,9 @@ function bibdkcaptcha_scramble_audio_data($data) {
 
   for ($i = $start; $i < $datalen; $i += $step) {
     $ch = ord($data{$i});
-    if ($ch == 0 || $ch == 255)
+    if ($ch == 0 || $ch == 255) {
       continue;
+    }
 
     if ($ch < 16 || $ch > 239) {
       $ch += rand(-6, 6);
@@ -153,10 +162,12 @@ function bibdkcaptcha_scramble_audio_data($data) {
       $ch += rand(-12, 12);
     }
 
-    if ($ch < 0)
+    if ($ch < 0) {
       $ch = 0;
-    else if ($ch > 255)
+    }
+    elseif ($ch > 255) {
       $ch = 255;
+    }
 
     $data{$i} = chr($ch);
 
@@ -167,7 +178,8 @@ function bibdkcaptcha_scramble_audio_data($data) {
 }
 
 /**
- * Helper function to support case sensitivness in danish speaken audio captcha. 
+ * Helper function to support case sensitivness in danish speaken audio captcha.
+ *
  * @param array $letters
  * @return array $sens_letters with strings to support upper- and lowercase. Dansih only
  */

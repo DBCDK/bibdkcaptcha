@@ -45,10 +45,10 @@ function bibdkcaptcha_menu() {
 
 /**
  * Implementation of hook_captcha().
- * 
+ *
  */
 function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
-  drupal_add_js(drupal_get_path('module', 'bibdkcaptcha') . '/bibdkcaptcha.js');
+  drupal_add_js(drupal_get_path('module', 'bibdkcaptcha') . '/js/bibdkcaptcha.js');
   switch ($op) {
     case 'list':
       return array('Bibdk Captcha');
@@ -82,22 +82,28 @@ function bibdkcaptcha_captcha($op, $captcha_type = '', $sid = NULL) {
  * @param $solution the new solution to associate with the given CAPTCHA session.
  */
 function _bibdkcaptcha_update_captcha_session($captcha_sid, $solution) {
-  $token = db_query("SELECT solution FROM {captcha_sessions} WHERE csid = '$captcha_sid'")->fetchField();
+  $query = db_select('captcha_sessions', 'c')
+    ->condition('csid', $captcha_sid, '=')
+    ->fields('c', array('solution'));
+  $result = $query->execute();
+  $token = $result->fetchField();
+
   db_update('captcha_sessions')
-      ->condition('csid', $captcha_sid)
-      ->fields(array(
-        'token' => $token,
-        'timestamp' => REQUEST_TIME,
-        'solution' => $solution,
-      ))
-      ->execute();
+    ->condition('csid', $captcha_sid)
+    ->fields(array(
+    'token' => $token,
+    'timestamp' => REQUEST_TIME,
+    'solution' => $solution,
+  ))
+    ->execute();
   return $token;
 }
 
 /**
  * Helper function for appending refresh and audio buttons to image markup
+ *
  * @param string $markup
- * @return string 
+ * @return string
  */
 function _bibdkcaptcha_get_markup($markup) {
   $module_path = base_path() . drupal_get_path('module', 'bibdkcaptcha');
@@ -128,20 +134,28 @@ function bibdkcaptcha_callback_refresh() {
 
 /**
  * Called when the user requests a audio-captcha. Retrieves the solution for the given captcha from the database and sends it to the bibdkcaptcha_play_audio_file method
+ *
  * @param type $captcha_sid
  * @param type $token
  * @param type $type 'mp3' or 'wav' - depends on browser type
  */
 function bibdkcaptcha_generate_audio_file($captcha_sid, $token, $type) {
-  $result = db_query("SELECT solution FROM {captcha_sessions} WHERE csid = :csid AND token = :token", array(':csid' => $captcha_sid, ':token' => $token));
+  #$result = db_query("SELECT solution FROM {captcha_sessions} WHERE csid = :csid AND token = :token", array(':csid' => $captcha_sid, ':token' => $token));
+  $query = db_select('captcha_sessions', 'c')
+    ->condition('csid', $captcha_sid, '=')
+    ->condition('token', $token, '=')
+    ->fields('c', array('solution'));
+  $result = $query->execute();
+
   $solution = $result->fetchField();
   bibdkcaptcha_play_audio_file($solution, $type);
 }
 
 /**
  * Creates an audio-captcha based on the received solution and type, and echoes it with an appropriate header
- * @param type $solution
- * @param type $type 'mp3' or 'wav' - depends on browser type
+ *
+ * @param String $solution
+ * @param String $type 'mp3' or 'wav' - depends on browser type
  */
 function bibdkcaptcha_play_audio_file($solution, $type) {
   module_load_include('inc', 'bibdkcaptcha', 'bibdkcaptcha.audio');
