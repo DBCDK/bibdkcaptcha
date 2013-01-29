@@ -4,5 +4,5 @@ dependencies[] = captcha
 dependencies[] = image_captcha
 package = Spam control
 core = 7.x
-version = 7.x-0.2
+version = 7.x-0.3
 scripts[] = js/bibdkcaptcha.js
