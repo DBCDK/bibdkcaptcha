@@ -14,3 +14,73 @@ function bibdkcaptcha_install() {
   module_load_include('inc', 'captcha', 'captcha');
   captcha_set_form_id_setting('user_register_form', 'default');
 }
+
+/**
+ * Implementation of hook_requirements().
+ */
+function bibdkcaptcha_requirements($phase) {
+  global $conf;
+  $requirements = array();
+
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    $securepages_enabled = variable_get('securepages_enable');
+    if (!empty($securepages_enabled)) {
+      if (variable_get('securepages_secure')) {
+        $securepages_pages = variable_get('securepages_pages');
+        if (!(preg_match(bibdkcaptcha_regex_line('captcha'), $securepages_pages) && preg_match(bibdkcaptcha_regex_line('captcha/*'), $securepages_pages))) {
+          $requirements['bibdkcaptcha_secured_audio'] = array(
+            'title' => $t('Captcha audio not secured'),
+            'description' => t('Captcha audio requires "captcha" and "captcha/*" added to Pages at Secure Pages configuration page: !url.', array('!url' => l('admin/config/system/securepages', 'admin/config/system/securepages'))),
+            'severity' => REQUIREMENT_ERROR,
+            'value' => '',
+          );
+        }
+        if (!(preg_match(bibdkcaptcha_regex_line('image_captcha'), $securepages_pages) && preg_match(bibdkcaptcha_regex_line('image_captcha/*'), $securepages_pages))) {
+          $requirements['bibdkcaptcha_secured_image'] = array(
+            'title' => $t('Captcha images not secured'),
+            'description' => t('Captcha images requires "image_captcha" and "image_captcha/*" added to Pages at Secure Pages configuration page: !url.', array('!url' => l('admin/config/system/securepages', 'admin/config/system/securepages'))),
+            'severity' => REQUIREMENT_ERROR,
+            'value' => '',
+          );
+        }
+      }
+      else {
+        $securepages_ignore = variable_get('securepages_ignore');
+        if (preg_match(bibdkcaptcha_regex_line('captcha'), $securepages_ignore) || preg_match(bibdkcaptcha_regex_line('captcha/*'), $securepages_ignore)) {
+          $requirements['bibdkcaptcha_secured_audio'] = array(
+            'title' => $t('Captcha audio not secured'),
+            'description' => t('Captcha audio requires that "captcha" and "captcha/*" are not included in Ignore Pages at Secure Pages configuration page: !url.', array('!url' => l('admin/config/system/securepages', 'admin/config/system/securepages'))),
+            'severity' => REQUIREMENT_ERROR,
+            'value' => '',
+          );
+        }
+        if (preg_match(bibdkcaptcha_regex_line('image_captcha'), $securepages_ignore) || preg_match(bibdkcaptcha_regex_line('image_captcha/*'), $securepages_ignore)) {
+          $requirements['bibdkcaptcha_secured_image'] = array(
+            'title' => $t('Captcha images not secured'),
+            'description' => t('Captcha images requires that "image_captcha" and "image_captcha/*" are not included in Ignore Pages at Secure Pages configuration page: !url.', array('!url' => l('admin/config/system/securepages', 'admin/config/system/securepages'))),
+            'severity' => REQUIREMENT_ERROR,
+            'value' => '',
+          );
+        }
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Transforms a Drupal path to a PCRE pattern matching whole lines from textarea
+ * fields.
+ *
+ * @param $string
+ *   String describing a drupal path.
+ * @return
+ *   PCRE pattern of $string.
+ */
+function bibdkcaptcha_regex_line($string) {
+  return '/(^|\n)' . preg_quote($string, '/') . '(\r\n|$)/';
+}
