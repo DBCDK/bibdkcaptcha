@@ -28,7 +28,7 @@ function bibdkcaptcha_help($path, $arg) {
  */
 function bibdkcaptcha_menu() {
   $items = array();
-  $items['captcha/refreshcatptcha'] = array(
+  $items['captcha/refreshcaptcha'] = array(
     'page callback' => 'bibdkcaptcha_callback_refresh',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),

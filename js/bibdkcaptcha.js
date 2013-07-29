@@ -1,17 +1,12 @@
 (function($) {
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
-            var host = "http://" + document.location.hostname;
-
-            var basePath = Drupal.settings.basePath;
-            if(basePath.length){
-                host = host + basePath;
-            }
+            var basepath = Drupal.settings.basePath;
 
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
                 jQuery.ajax({
                     type: 'GET',
-                    url:host + 'captcha/refreshcatptcha',
+                    url: basepath + 'captcha/refreshcaptcha',
                     success: updateCaptcha,
                     dataType: JSON
                 });
@@ -21,7 +16,7 @@
                 var type = 'wav';
 
                 var mainUrl = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"
-                var url = host + mainUrl;
+                var url = basepath + mainUrl;
 
                 if($.browser['msie']){
                     type = 'mp3';
