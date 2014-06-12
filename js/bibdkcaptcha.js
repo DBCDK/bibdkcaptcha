@@ -18,7 +18,7 @@
                 var type = 'wav';
 
                 var mainUrl = 'captcha/playaudiocaptcha'+"/"+$('input[name=captcha_sid]').val()+"/"+$('input[name=captcha_token]').val()+"/"
-                var url = basepath + mainUrl;
+                var url = basepath + Drupal.settings.pathPrefix + mainUrl;
 
                 if($.browser['msie']){
                     type = 'mp3';
