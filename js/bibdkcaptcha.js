@@ -2,8 +2,10 @@
     Drupal.behaviors.bibdkcaptcha = {
         attach : function(context) {
             var basepath = Drupal.settings.basePath;
+            var audio_element = '#bibdkcaptcha-controls-playcaptcha-embed';
 
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
+                $(audio_element)[0].src = '';
                 jQuery.ajax({
                     type: 'GET',
                     url: basepath + 'captcha/refreshcaptcha',
@@ -23,9 +25,12 @@
                 }
 
                 var thissound = document.createElement('audio');
+                var thissound = $(audio_element)[0];
                 thissound.preload = 'auto';
                 thissound.autoplay = 'auto';
-                thissound.src = (url + type);
+                if (thissound.src == window.location.href) {
+                  thissound.src = (url + type);
+                }
                 thissound.play();
 
                 $("input#edit-captcha-response").focus();
