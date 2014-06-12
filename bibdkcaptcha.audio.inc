@@ -57,8 +57,8 @@ function bibdkcaptcha_scramble_audio_data_mpeg($data) {
  * @return string  WAV file data
  */
 function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
+  $silence = variable_get('bibdk_captcha_silence', 1500);
   $out_data = '';
-
   $lang = 'eng';
 
   global $language;
@@ -75,42 +75,20 @@ function bibdkcaptcha_generate_audio_wav($letters, $case_sentitive) {
   $data_len = 0;
   foreach ($letters as $letter) {
     $filename = $audio_path . strtoupper($letter) . '.wav';
-
     $fp = fopen($filename, 'rb');
-
     $file = array();
-
     $data = fread($fp, filesize($filename)); // read file in
-
-    $header = substr($data, 0, 36);
-    $body = substr($data, 44);
-
-    $data = unpack('NChunkID/VChunkSize/NFormat/NSubChunk1ID/VSubChunk1Size/vAudioFormat/vNumChannels/VSampleRate/VByteRate/vBlockAlign/vBitsPerSample', $header);
-
-    $file['sub_chunk1_id'] = $data['SubChunk1ID'];
-    $file['bits_per_sample'] = $data['BitsPerSample'];
-    $file['channels'] = $data['NumChannels'];
-    $file['format'] = $data['AudioFormat'];
-    $file['sample_rate'] = $data['SampleRate'];
-    $file['size'] = $data['ChunkSize'] + 8;
-    $file['data'] = $body;
-
-    if (($p = strpos($file['data'], 'LIST')) !== FALSE) {
-// If the LIST data is not at the end of the file, this will probably break your sound file
-      $info = substr($file['data'], $p + 4, 8);
-      $data = unpack('Vlength/Vjunk', $info);
-      $file['data'] = substr($file['data'], 0, $p);
-      $file['size'] = $file['size'] - (strlen($file['data']) - $p);
-    }
-
-    $files[] = $file;
-    $data = NULL;
-    $header = NULL;
-    $body = NULL;
-
-    $data_len += strlen($file['data']);
-
     fclose($fp);
+    $wave = bibdkcaptcha_wave_riff($data);
+    $wave['format'] = $wave['fmt']['AudioFormat'];
+    $wave['channels'] = $wave['fmt']['NumChannels'];
+    $wave['sample_rate'] = $wave['fmt']['SampleRate'];
+    $wave['bits_per_sample'] = $wave['fmt']['BitsPerSample'];
+    $padding = $wave['channels'] * $wave['sample_rate'] * $wave['bits_per_sample'] / 8 * $silence / 1000;
+    $padding -= $padding % $wave['fmt']['BlockAlign'];
+    $data_len += strlen($wave['data']['audio']) + $padding;
+    $wave['data'] = $wave['data']['audio'] . str_pad('', $padding, "\x00");
+    $files[] = $wave;
   }
 
   $out_data = '';
@@ -197,4 +175,51 @@ function bibdkcaptcha_generate_case_sensitive($letters) {
     $sens_letters[] = $letter;
   }
   return $sens_letters;
+}
+
+/**
+ * Reads the data subchunk from the beginning of a data string. Verification that
+ * this is a data subchunk can be done by checking that SubChunkID is 0x64617461
+ * (big-endian) spelling 'data'.
+ *
+ * @param array $data
+ * @return array
+ */
+function bibdkcaptcha_wave_data($data) {
+  $audio = unpack('NSubChunkID/VSubChunkSize', $data);
+  $audio['size'] = $audio['SubChunkSize'] + 8;
+  $audio['audio'] = substr($data, 8, $audio['SubChunkSize']);
+  return $audio;
+}
+
+/**
+ * Reads the fmt subchunk from the beginning of a data string. Verification that
+ * this is a fmt subchunk can be done by checking that SubChunkID is 0x666d7420
+ * (big-endian) spelling 'fmt ' (note the space!).
+ *
+ * @param array $data
+ * @return array
+ */
+function bibdkcaptcha_wave_fmt($data) {
+  $fmt = unpack('NSubChunkID/VSubChunkSize/vAudioFormat/vNumChannels/VSampleRate/VByteRate/vBlockAlign/vBitsPerSample', $data);
+  $fmt['size'] = $fmt['SubChunkSize'] + 8;
+  return $fmt;
+}
+
+/**
+ * Reads the riff chunk from the beginning of a data string. Verification that
+ * this is a riff chunk can be done by checking that ChunkID is 0x52494646
+ * (big-endian) spelling 'RIFF'.
+ *
+ * @param array $data
+ * @return array
+ */
+function bibdkcaptcha_wave_riff($data) {
+  $riff = unpack('NChunckID/VChunkSize/NFormat', $data);
+  $riff['size'] = $riff['ChunkSize'] + 8;
+  $data = substr($data, 12);
+  $riff['fmt'] = bibdkcaptcha_wave_fmt($data);
+  $data = substr($data, $riff['fmt']['size']);
+  $riff['data'] = bibdkcaptcha_wave_data($data);
+  return $riff;
 }
