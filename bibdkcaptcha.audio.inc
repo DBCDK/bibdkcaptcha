@@ -380,18 +380,6 @@ function bibdkcaptcha_mpeg_emphasis() {
 function bibdkcaptcha_mpeg_header_decode($raw_header) {
   $MPEG_HEADER_METRICS = bibdkcaptcha_mpeg_metrics($raw_header['Version']);
   $MPEG_HEADER_METRICS['Bitrate'] = $MPEG_HEADER_METRICS['Bitrate'][$raw_header['Layer']];
-  /*array(
-    'Version' => mpeg_version(),
-    'Layer' => mpeg_layer(),
-    'Bitrate' => mpeg_bitrate(),
-    'Frequency' => mpeg_frequency(),
-    'Mode' => mpeg_mode(),
-    'ModeExtension' => mpeg_mode_extension(),
-  );
-
-  $MPEG_HEADER_METRICS['Bitrate'] = $MPEG_HEADER_METRICS['Bitrate'][$raw_header['Version']];
-  $MPEG_HEADER_METRICS['Frequency'] = $MPEG_HEADER_METRICS['Frequency'][$raw_header['Version']];
-  */
   $header = array();
 
   foreach($MPEG_HEADER_METRICS as $field => $metrics) {
@@ -487,6 +475,7 @@ function bibdkcaptcha_mpeg_header_encode($header) {
  * Create a mpeg audio clip containing of a specified length.
  *
  * @param $header mpeg header as an associative array including Sync field
+ * @param $milliseconds specifies how long the silence should be
  * @return string
  */
 function bibdkcaptcha_mpeg_create_silence($header, $milliseconds) {
