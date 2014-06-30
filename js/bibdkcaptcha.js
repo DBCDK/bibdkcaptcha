@@ -38,7 +38,7 @@
 
             function updateCaptcha(data){
                 var data = jQuery.parseJSON(data);
-                $("#bibdkcaptcha-controls img:first-child").remove();
+                $("#bibdkcaptcha-controls img:first").remove();
                 $(data['captcha']).prependTo("#bibdkcaptcha-controls");
 
                 $('input[name=captcha_sid]').val(data['sid']);
