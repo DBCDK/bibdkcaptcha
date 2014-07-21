@@ -5,7 +5,7 @@
             var audio_element = '#bibdkcaptcha-controls-playcaptcha-embed';
 
             $("#bibdkcaptcha-controls-refreshbtn").click(function() {
-                $(audio_element)[0].src = '';
+                $(audio_element)[0].removeAttribute('src');
                 jQuery.ajax({
                     type: 'GET',
                     url: basepath + 'captcha/refreshcaptcha',
@@ -24,16 +24,16 @@
                     type = 'mp3';
                 }
 
-                var thissound = document.createElement('audio');
                 var thissound = $(audio_element)[0];
                 thissound.preload = 'auto';
                 thissound.autoplay = 'auto';
-                if (thissound.src == window.location.href) {
-                  thissound.src = (url + type);
+
+                if (!thissound.hasAttribute('src')) {
+                  thissound.setAttribute('src', url + type);
                 }
-                thissound.play();
 
                 $("input#edit-captcha-response").focus();
+                thissound.play();
             });
 
             function updateCaptcha(data){
